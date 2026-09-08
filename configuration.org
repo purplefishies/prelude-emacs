@@ -2067,6 +2067,7 @@ Hiding leading stars
         ("c" "Current Journal" entry (file+function my-org-personal-capture-filename jd/find-create-date-entry )
          "** %?\t\t:work:\n" )
         ("q" "Questions" plain (file+function "~/Dropbox/org/questions.org" jd/find-create-date-entry) "** %?\t\t:question:\n    :PROPERTIES:\n    :MODIFIED: %U\n    :END:\n" )
+        ("T" "Terminology" entry (file+headline "~/Dropbox/org/work.org" "Terminology") "*** %^{Term}\n%?\n")
         ))
 
 (setq org-journal-file-format "%Y%m%d.org")
@@ -3507,6 +3508,13 @@ CLOSED: [2025-10-24 Fri 11:38]
 
 
 
+* Licenses  For Xilinx / AMD
+
+- License file: C:\AMDDesignTools\win64.o\Licenses\AMD License.lic
+- FlexNet license manager: C:\AMDDesignTools\2026.1\Vivado\bin\unwrapped\win64.o\lmgrd.exe
+- AMD/Xilinx vendor daemon: C:\AMDDesignTools\win64.o\xilinxd.exe
+
+    
 * Org file opening
 
 #+begin_src emacs-lisp
@@ -3526,7 +3534,6 @@ CLOSED: [2025-10-24 Fri 11:38]
 ;(advice-add 'org-open-file :after #'my/org-reindent-buffer)
 
 #+end_src
-
 
 
 * Minted output
@@ -4203,3 +4210,13 @@ document.addEventListener('DOMContentLoaded', function () {
 #+begin_src emacs-lisp
 (require 'ob-svgbob)
 #+end_src
+
+
+* Capture template for 
+
+
+* Emacs inline images
+#+begin_src 
+#+end_src
+(with-eval-after-load 'org
+  (add-to-list 'image-file-name-extensions "pdf"))
