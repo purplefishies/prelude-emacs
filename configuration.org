@@ -4217,10 +4217,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
 * Emacs inline images
 #+begin_src emacs-lisp
-(with-eval-after-load 'org
-  (add-to-list 'image-file-name-extensions "pdf"))
+
+(use-package org-inline-pdf
+  :ensure t
+  :after org
+  :hook (org-mode . org-inline-pdf-mode)
+  :custom
+  (org-startup-with-inline-images t))
 
 #+end_src
 
 #+RESULTS:
-| pdf | png | jpeg | jpg | gif | tiff | tif | xbm | xpm | pbm | pgm | ppm | pnm | svg | webp |
+| org-inline-pdf-mode | (lambda nil (local-set-key (kbd S-<left>) #'org-shiftleft) (local-set-key (kbd S-<right>) #'org-shiftright) (local-set-key (kbd <S-left>) #'org-shiftleft) (local-set-key (kbd <S-right>) #'org-shiftright)) | org-ref-org-menu | org-clock-load | org-bullets-mode | turn-on-flyspell | turn-on-auto-fill | outline-minor-mode | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-fold-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (run-hooks 'prelude-org-mode-hook)) |
+
+
+* Personal ledger
+#+begin_src emacs-lisp
+  (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
+#+end_src
+
