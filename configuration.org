@@ -2062,6 +2062,8 @@ Hiding leading stars
       '(("t" "Todo" entry (file+headline "~/Dropbox/org/inbox.org" "Tasks")  "* TODO %?\n%i\n   %a")
         ("j" "Journal" plain (file+function "~/Dropbox/org/journal.org" jd/find-create-date-entry ) "** %?\n    %i\n\n   %a" )
         ("W" "Work Journal" plain (file+function "~/Dropbox/org/workjournal.org" jd/find-create-date-entry ) "** %?\t\t:@work:\n    %i\n%a" )
+        ("m" "Work meeting TODO" entry (file+function "~/Dropbox/org/workjournal.org" jd/find-create-date-entry)
+         "** TODO %?\t\t:@workjournal:\n%i\n%a")
         ("S" "Someday Task" entry (file+headline "~/Dropbox/org/someday.org" "Tasks")
          "* %?\t\t:question:\n    :PROPERTIES:\n    :MODIFIED: %U\n    :END:\n")
         ("c" "Current Journal" entry (file+function my-org-personal-capture-filename jd/find-create-date-entry )
@@ -2185,8 +2187,8 @@ Hiding leading stars
                                 (concat dropbox-directory "gtd.org")
                                 (concat dropbox-directory "archive.org")
                                 (concat dropbox-directory "inbox.org")
-                                "/home/jdamon/Projects/work/work.org"
-                               )))
+                                (concat dropbox-directory "work.org"
+                               ))))
 
 (setq org-agenda-custom-commands
       `(("c" "Simple agenda view"
@@ -2274,9 +2276,10 @@ Hiding leading stars
         ("o"  "Office stuff" tags-todo "@work"
          ((org-agenda-overriding-header "Work")
           (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
-        )); org-agenda-custom-commands
-                                ;; :deadline (before "2022-11-20")
-                                ;; :deadline (before '(org-read-date nil nil "+1"))
+        ("L" "Work Journal" tags-todo "@workjournal"
+         ((org-agenda-overriding-header "Work Journal")
+          (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
+        )); 
 
 (defun jmd-org-tasks-closed-in-month (&optional month year match-string)
   "Produces an org agenda tags view list of the tasks completed
@@ -3307,11 +3310,15 @@ Magit
 #+begin_src emacs-lisp
 (setq org-refile-files
       '("~/Dropbox/org/gtd.org" "~/Dropbox/org/someday.org" "~/Dropbox/org/tickler.org" "~/Dropbox/org/reckoning.org"
-        "~/Dropbox/org/knowledge.org" "~/Dropbox/org/work.org"  ))
+        "~/Dropbox/org/knowledge.org" "~/Dropbox/org/work.org" "~/Dropbox/org/workjournal.org" ))
 
 (setq org-refile-targets
       '((nil :maxlevel . 3)
         (org-refile-files :maxlevel . 3)))
+
+;; Make refile targets unambiguous when several journal dates share headings.
+(setq org-refile-use-outline-path 'file
+      org-outline-path-complete-in-steps nil)
 #+end_src
 
 
@@ -4235,4 +4242,3 @@ document.addEventListener('DOMContentLoaded', function () {
 #+begin_src emacs-lisp
   (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
 #+end_src
-
