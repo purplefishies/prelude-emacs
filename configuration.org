@@ -2,7 +2,7 @@
 #+AUTHOR: Jimi Damon
 #+EMAIL: jdamon@gmail.com
 #+OPTIONS: toc:nil num:nil
-#+TODO: TODO(t) NEXT(n) WAITING(w) HOLD(h) POSTPONED(p) |  DONE(d)
+#+TODO: TODO(t) NEXT(n) WAITING(w) HOLD(h) BLOCKED(b) POSTPONED(p) |  DONE(d)
 
 
 
@@ -1703,6 +1703,7 @@ i.e. change right window to bottom, or change bottom window to right."
                 (set-window-buffer (windmove-find-other-window neighbour-dir) other-buf))))))))
 
    (defalias 'rotate-window 'window-toggle-split-direction )
+  (require 'org)
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
   (setq org-display-inline-images t)
   (setq org-redisplay-inline-images t)
@@ -2251,6 +2252,11 @@ Hiding leading stars
           (alltodo "" ((org-agenda-overriding-header "")
                        (org-super-agenda-groups
                         '(
+                          (:name "Work Journal"
+                                 :category "workjournal"
+                                 :order 10
+                                 :discard (:todo "WAITING")
+)
                           (:name "Inbox"
                                            :order 6
                                            :file-path "inbox"
@@ -2276,9 +2282,8 @@ Hiding leading stars
         ("o"  "Office stuff" tags-todo "@work"
          ((org-agenda-overriding-header "Work")
           (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
-        ("L" "Work Journal" tags-todo "@workjournal"
-         ((org-agenda-overriding-header "Work Journal")
-          (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
+        ("L" "Work Journal" tags-todo "CATEGORY=\"workjournal\""
+         ((org-agenda-overriding-header "Work Journal")))
         )); 
 
 (defun jmd-org-tasks-closed-in-month (&optional month year match-string)
@@ -3310,7 +3315,7 @@ Magit
 #+begin_src emacs-lisp
 (setq org-refile-files
       '("~/Dropbox/org/gtd.org" "~/Dropbox/org/someday.org" "~/Dropbox/org/tickler.org" "~/Dropbox/org/reckoning.org"
-        "~/Dropbox/org/knowledge.org" "~/Dropbox/org/work.org" "~/Dropbox/org/workjournal.org" ))
+        "~/Dropbox/org/knowledge.org" "~/Dropbox/org/work.org" ))
 
 (setq org-refile-targets
       '((nil :maxlevel . 3)
@@ -3447,6 +3452,26 @@ Magit
 (defvar my-auto-commit-enabled t
   "If non-nil, auto-commit on save is enabled.")
 
+(defcustom my-auto-commit-org-excluded-directories
+  (list user-emacs-directory)
+  "Directories whose Org files must never be auto-committed.
+
+Entries apply recursively.  Add another directory with, for example,
+`(add-to-list 'my-auto-commit-org-excluded-directories \"~/path/to/dir/\")'."
+  :type '(repeat directory))
+
+(defun my-auto-commit-org-file-excluded-p (file)
+  "Return non-nil when FILE is an Org file under an excluded directory."
+  (and (string-match-p "\\.org\\'" file)
+       (let ((file (file-truename file)))
+         (catch 'excluded
+           (dolist (directory my-auto-commit-org-excluded-directories)
+             (when (and (file-directory-p directory)
+                        (file-in-directory-p
+                         file (file-truename (expand-file-name directory))) )
+               (throw 'excluded t)))
+           nil))))
+
 
 (defun my-toggle-auto-commit ()
   "Toggle automatic git commits on save."
@@ -3461,7 +3486,8 @@ Magit
   (when (and my-auto-commit-enabled
              buffer-file-name
              (or (string-match "\\.org\\'" buffer-file-name)
-                 (derived-mode-p 'sh-mode)))
+                 (derived-mode-p 'sh-mode))
+             (not (my-auto-commit-org-file-excluded-p buffer-file-name)))
     (let* ((default-directory (locate-dominating-file buffer-file-name ".git"))
            (msg (format ":robot: Auto-commit: %s"
                         (file-name-nondirectory buffer-file-name))))
@@ -3504,12 +3530,11 @@ Magit
 #+end_src
 
 
-* DONE Todos
-CLOSED: [2025-10-24 Fri 11:38]
+* Todos
 #+begin_src emacs-lisp
 (setq org-todo-keywords
       '((sequence
-         "TODO(t)" "NEXT(n)" "WAITING(w)" "POSTPONED(p)" "HOLD(h)" "|"
+         "TODO(t)" "NEXT(n)" "WAITING(w)" "BLOCKED(b)" "POSTPONED(p)" "HOLD(h)" "|"
          "DONE(d)" "CANCELLED(c@/!)"  )))
 #+end_src
 
@@ -4242,3 +4267,5 @@ document.addEventListener('DOMContentLoaded', function () {
 #+begin_src emacs-lisp
   (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
 #+end_src
+
+

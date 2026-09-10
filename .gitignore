@@ -34,3 +34,4 @@ gotools/
 eln-cache/
 org-roam.db
 org-clock-save.el
+configuration.el

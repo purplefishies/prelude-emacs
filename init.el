@@ -173,7 +173,37 @@ by Prelude.")
 (with-eval-after-load 'flycheck
   (setq flycheck-display-errors-function nil))
 (global-flycheck-mode -1)
-(org-babel-load-file "~/.emacs.d/configuration.org")
+(require 'ob-tangle)
+(defun jmd/load-literate-configuration ()
+  "Safely tangle and load the personal Org configuration.
+
+The generated Lisp file is replaced only after its complete contents have
+been read successfully.  This prevents an interrupted tangle from leaving a
+truncated `configuration.el' that breaks the next Emacs startup."
+  (let* ((org-file (expand-file-name "configuration.org" user-emacs-directory))
+         (el-file (expand-file-name "configuration.el" user-emacs-directory)))
+    (when (file-newer-than-file-p org-file el-file)
+      (let ((temporary-file
+             (make-temp-file
+              (expand-file-name ".configuration-" user-emacs-directory)
+              nil ".el")))
+        (unwind-protect
+            (progn
+              (org-babel-tangle-file org-file temporary-file "emacs-lisp")
+              (with-temp-buffer
+                (insert-file-contents temporary-file)
+                (goto-char (point-min))
+                (while (progn
+                         (skip-chars-forward " \t\n\r")
+                         (not (eobp)))
+                  (read (current-buffer))))
+              (rename-file temporary-file el-file t)
+              (setq temporary-file nil))
+          (when temporary-file
+            (delete-file temporary-file)))))
+    (load el-file nil nil t)))
+
+(jmd/load-literate-configuration)
 (electric-pair-mode -1)
                                         ;()
 (setq electric-pair-mode nil)
@@ -235,5 +265,3 @@ by Prelude.")
 (require 'server)
 (unless (server-running-p)
   (server-start))
-
-
