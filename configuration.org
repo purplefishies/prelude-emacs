@@ -4265,7 +4265,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 * Personal ledger
 #+begin_src emacs-lisp
-  (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
+  (load (expand-file-name "personal/ledger-inline-receipts.el"
+                          user-emacs-directory)
+        nil nil t)
 #+end_src
-
 

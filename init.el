@@ -164,7 +164,7 @@ by Prelude.")
 (guru-mode -1 )
 (guru-global-mode -1)
 
-(flyspell-mode-off)
+(flyspell-mode -1)
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
 (hl-line-mode nil)
