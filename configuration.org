@@ -4269,3 +4269,69 @@ document.addEventListener('DOMContentLoaded', function () {
 #+begin_src emacs-lisp
   (setq find-file-visit-truename t)
 #+end_src
+
+* Yank images
+#+begin_src emacs-lisp
+(setq org-yank-image-save-method
+      (lambda ()
+        (expand-file-name
+         (format-time-string "images/%Y/%b/")
+         (or (and buffer-file-name
+                  (file-name-directory buffer-file-name))
+             default-directory))))
+#+end_src
+
+#+RESULTS:
+
+
+* Fix image display
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+      (defun jmd/org-display-dpi-fallback ()
+        (if (display-graphic-p)
+            (let ((mm-height (display-mm-height)))
+              (if (> mm-height 0)
+                  (round (/ (display-pixel-height)
+                            (/ mm-height 25.4)))
+                (error "Emacs reported a zero physical display height")))
+          (error "Attempt to calculate DPI in a non-graphic display")))
+      (advice-add 'org--get-display-dpi :override
+                  #'jmd/org-display-dpi-fallback))
+#+end_src
+
+
+* Versioning of headers
+
+#+begin_src emacs-lisp
+  (defun jmd/org-bump-releases (&optional amount)
+    "Add AMOUNT to the minor version of this and later sibling TODOs."
+    (interactive "p")
+    (setq amount (or amount 1))
+    (org-back-to-heading t)
+    (let ((level (org-outline-level))
+          (end (copy-marker
+                (save-excursion
+                  (if (org-up-heading-safe)
+                      (org-end-of-subtree t t)
+                    (point-max))) t))
+          (version-re "[(][ \t]*[0-9]+\\.\\([0-9]+\\)\\.[0-9]+[ \t]*[)]"))
+      (unwind-protect
+          (atomic-change-group
+            (save-excursion
+              (while (re-search-forward org-heading-regexp end t)
+                (beginning-of-line)
+                (when (and (= (org-outline-level) level)
+                           (member (org-get-todo-state)
+                                   org-not-done-keywords)
+                           (re-search-forward version-re
+                                              (line-end-position) t))
+                  (let ((minor (+ (string-to-number (match-string 1))
+                                  amount)))
+                    (when (< minor 0)
+                      (user-error "Minor version cannot be negative"))
+                    (replace-match (number-to-string minor)
+                                   t t nil 1)))
+                (end-of-line))))
+        (set-marker end nil))))
+#+end_src
