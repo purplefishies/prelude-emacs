@@ -3535,8 +3535,10 @@ Entries apply recursively.  Add another directory with, for example,
 (setq org-todo-keywords
       '((sequence
          "TODO(t)" "NEXT(n)" "WAITING(w)" "BLOCKED(b)" "POSTPONED(p)" "HOLD(h)" "|"
-         "DONE(d)" "CANCELLED(c@/!)"  )))
+         "DONE(d@)" "CANCELLED(c@/!)"  )))
 #+end_src
+
+
 
 
 
@@ -4270,3 +4272,10 @@ document.addEventListener('DOMContentLoaded', function () {
         nil nil t)
 #+end_src
 
+* Disable Prelude super-save
+#+begin_src emacs-lisp
+  ;; Prelude enables this globally.  Disable it so visiting TRAMP files does
+  ;; not cause writes when switching buffers/windows or losing frame focus.
+  (with-eval-after-load 'super-save
+    (super-save-mode -1))
+#+end_src
