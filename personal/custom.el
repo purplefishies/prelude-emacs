@@ -13,5 +13,6 @@
  '(org-agenda-calendar-event ((t (:background "#3e322a" :foreground "dark sea green" :overline nil :weight bold))))
  '(org-agenda-done ((t (:foreground "aquamarine4" :strike-through t :overline nil))))
  '(org-headline-done ((t (:foreground "#376F5D" :strike-through t :overline nil :weight normal :height 1.0))))
+ '(org-scheduled-previously ((t (:foreground "tomato" :box nil :overline nil))))
  '(org-time-grid ((t (:foreground "deep sky blue" :overline nil))))
  '(org-todo ((t (:foreground "tomato" :box (:line-width (1 . 1) :color "#2c5462") :overline nil :weight bold)))))
