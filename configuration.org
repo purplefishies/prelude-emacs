@@ -552,8 +552,6 @@ YEAR/Month subdirectory based on the org file name, and insert a link."
 
 #+end_src
 
-
-
 * Project management
 
 I use a few packages in virtually every programming or writing environment to
@@ -699,17 +697,6 @@ project root (if I'm not in a "real" project).
     (setq projectile-completion-system 'ivy)
     (setq projectile-switch-project-action 'projectile-dired)
     (setq projectile-require-project-root nil))
-#+END_SRC
-
-** =undo-tree=
-   :PROPERTIES:
-   :ID:       ec238dcf-37dd-42d8-9379-53cf863cd2fb
-   :END:
-
-I like tree-based undo management. I only rarely need it, but when I do, oh boy.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package undo-tree)
 #+END_SRC
 
 * Language Support and Development Environments
@@ -2616,6 +2603,10 @@ Hiding leading stars
   :no-require
   :config (citar-embark-mode))
 
+(use-package embark-consult
+  :ensure t
+  :after (embark consult))
+
 #+end_src
 ** Org Dailies with Org Roam
 :PROPERTIES:
@@ -3445,7 +3436,6 @@ Magit
   :custom
   (magit-delta-delta-args '("--navigate" "--line-numbers")))
 #+end_src
-
 * Auto commit org (and shell)
 #+begin_src emacs-lisp
 
@@ -4209,13 +4199,6 @@ document.addEventListener('DOMContentLoaded', function () {
 * Doxymacs
 #+begin_src emacs-lisp
 
-(use-package crux
-  :bind
-  (("C-c D" . crux-duplicate-current-line-or-region))
-  :config
-  (global-unset-key (kbd "C-c d")))
-
-
 (use-package doxymacs
   :ensure t
   :after cc-mode
@@ -4230,19 +4213,206 @@ document.addEventListener('DOMContentLoaded', function () {
   (define-key c-mode-base-map (kbd "C-c d m") #'doxymacs-insert-blank-multiline-comment)
   (define-key c-mode-base-map (kbd "C-c d s") #'doxymacs-insert-blank-singleline-comment))
 
-;; Final override after all packages initialize.
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (global-unset-key (kbd "C-c d"))
-            (global-set-key (kbd "C-c D")
-                            #'crux-duplicate-current-line-or-region)))
-
 #+end_src
 
 
 * SVG Bob
 #+begin_src emacs-lisp
-(require 'ob-svgbob)
+(use-package ob-svgbob
+  :ensure t)
+#+end_src
+
+
+* Jumping around headings
+
+#+begin_src emacs-lisp
+
+  (defun jmd/org-next-visible-heading (&optional arg)
+    "Move forward ARG visible headings, defaulting to 3."
+    (interactive "P")
+    (org-next-visible-heading
+     (if arg (prefix-numeric-value arg) 3)))
+
+  (defun jmd/org-previous-visible-heading (&optional arg)
+    "Move backward ARG visible headings, defaulting to 3."
+    (interactive "P")
+    (org-previous-visible-heading
+     (if arg (prefix-numeric-value arg) 3)))
+
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "C-<down>" #'jmd/org-next-visible-heading)
+    (keymap-set org-mode-map "C-<up>" #'jmd/org-previous-visible-heading))
+
+#+end_src
+
+* Color settings
+#+begin_src emacs-lisp
+(progn
+    (set-face-attribute 'org-agenda-current-time nil :foreground "chartreuse")
+    (set-face-attribute 'org-agenda-done nil :foreground "sea green")
+    (set-face-attribute 'org-done nil :foreground "sea green" :weight 'bold)
+    (set-face-attribute 'org-level-4 nil :foreground "light goldenrod")
+    (set-face-attribute 'org-priority nil :foreground "light goldenrod")
+    (set-face-attribute 'org-scheduled nil :foreground "light salmon")
+    (set-face-attribute 'org-scheduled-today nil :foreground "light goldenrod")
+    (set-face-attribute 'org-time-grid nil :foreground "PaleGreen4")
+    (set-face-attribute 'org-warning nil :foreground "salmon" :weight 'bold))
+#+end_src
+
+
+
+* Yank media images
+#+begin_src emacs-lisp
+(require (quote yank-media))
+
+(defun jmd/yank-media--image-extension (media-type)
+  "Return a sensible filename extension for image MEDIA-TYPE."
+  (pcase (symbol-name media-type)
+    ("image/jpeg" "jpg")
+    ("image/svg+xml" "svg")
+    ((and type (pred (string-prefix-p "image/")))
+     (replace-regexp-in-string
+      "[^[:alnum:]]+" "-" (substring type (length "image/"))))
+    (_ (user-error "Unsupported clipboard media type: %s" media-type))))
+
+(defun jmd/yank-media--available-file (directory extension)
+  "Return a new timestamped filename in DIRECTORY with EXTENSION."
+  (let* ((stem (format-time-string "clipboard-%Y%m%dT%H%M%S"))
+         (file (expand-file-name (format "%s.%s" stem extension) directory))
+         (number 2))
+    (while (file-exists-p file)
+      (setq file (expand-file-name
+                  (format "%s-%d.%s" stem number extension)
+                  directory)
+            number (1+ number)))
+    file))
+
+(defun jmd/yank-media--save-org-image (media-type data)
+  "Save image DATA of MEDIA-TYPE and insert an Org file link to it."
+  (let* ((directory
+          (expand-file-name
+           (format-time-string "%Y/%b/")
+           "~/Dropbox/org/Images/"))
+         (file (jmd/yank-media--available-file
+                directory (jmd/yank-media--image-extension media-type)))
+         (link (file-relative-name
+                file
+                (if buffer-file-name
+                    (file-name-directory buffer-file-name)
+                  default-directory))))
+    (make-directory directory t)
+    (let ((coding-system-for-write (quote binary)))
+      (write-region data nil file nil (quote silent)))
+    (insert "#+ATTR_ORG: :width 400\n"
+            (org-link-make-string (concat "file:" link))
+            "\n")
+    (when (org-invisible-p)
+      (org-reveal))
+    (org-display-inline-images)
+    (message "Saved clipboard image to %s" (abbreviate-file-name file))))
+
+(defun jmd/yank-media--around (original &rest arguments)
+  "Use the custom image handler when ORIGINAL runs in an Org buffer."
+  (if (derived-mode-p (quote org-mode))
+      (let ((yank-media--registered-handlers
+             (quote (("image/" . jmd/yank-media--save-org-image)))))
+        (apply original arguments))
+    (apply original arguments)))
+
+(defun jmd/yank-media ()
+  "Yank media, saving Org images under Images/YYYY/Mon/ ."
+  (interactive)
+  (call-interactively (function yank-media)))
+
+(advice-add (quote yank-media) :around (function jmd/yank-media--around))
+#+end_src
+
+
+* Web browser selection
+#+begin_src emacs-lisp
+(require (quote browse-url))
+(require (quote seq))
+
+(defcustom jmd/browse-url-programs
+  (quote ("chromium" "chromium-browser"
+          "google-chrome-stable" "google-chrome"
+          "firefox"))
+  "Browser programs to try, in preference order."
+  :type (quote (repeat string))
+  :group (quote browse-url))
+
+(defun jmd/browse-url (url &optional new-window)
+  "Open URL with the first installed browser in `jmd/browse-url-programs`.
+Fall back to the desktop default when none of those programs exists."
+  (interactive (browse-url-interactive-arg "URL: "))
+  (if-let ((program (seq-find (function executable-find)
+                              jmd/browse-url-programs)))
+      (let ((browse-url-generic-program program))
+        (browse-url-generic url new-window))
+    (browse-url-default-browser url new-window)))
+
+(setq browse-url-browser-function (function jmd/browse-url))
+
+(with-eval-after-load (quote org)
+  (add-to-list (quote org-file-apps)
+               (quote ("html?$" . jmd/browse-url))))
+#+end_src
+
+
+* Import and display PDFs in Org
+#+begin_src emacs-lisp
+(use-package org-inline-pdf
+  :ensure t
+  :after org
+  :hook (org-mode . org-inline-pdf-mode))
+
+(defun jmd/pdf--unique-destination (directory filename)
+  "Return an unused path for FILENAME in DIRECTORY."
+  (let* ((extension (file-name-extension filename t))
+         (stem (file-name-sans-extension filename))
+         (destination (expand-file-name filename directory))
+         (number 2))
+    (while (file-exists-p destination)
+      (setq destination
+            (expand-file-name
+             (format "%s-%d%s" stem number extension)
+             directory)
+            number (1+ number)))
+    destination))
+
+(defun jmd/org-import-pdf (source)
+  "Copy PDF SOURCE into Images/YYYY/Mon beside the current Org file.
+Insert a relative Org link and display its first page inline."
+  (interactive
+   (list (read-file-name "PDF to import: " nil nil t nil
+                         (lambda (file)
+                           (or (file-directory-p file)
+                               (string-equal
+                                (downcase (or (file-name-extension file) ""))
+                                "pdf"))))))
+  (unless buffer-file-name
+    (user-error "Save this Org buffer before importing a PDF"))
+  (unless (and (file-regular-p source)
+               (string-equal (downcase (or (file-name-extension source) ""))
+                             "pdf"))
+    (user-error "Not a readable PDF file: %s" source))
+  (let* ((org-directory (file-name-directory buffer-file-name))
+         (directory (expand-file-name
+                     (format-time-string "Images/%Y/%b/")
+                     org-directory))
+         (destination
+          (jmd/pdf--unique-destination
+           directory (file-name-nondirectory source)))
+         (link (file-relative-name destination org-directory)))
+    (make-directory directory t)
+    (copy-file source destination)
+    (insert "#+ATTR_ORG: :width 400\n"
+            (org-link-make-string (concat "file:" link))
+            "\n")
+    (unless (bound-and-true-p org-inline-pdf-mode)
+      (org-inline-pdf-mode 1))
+    (org-display-inline-images)
+    (message "Imported PDF to %s" (abbreviate-file-name destination))))
 #+end_src
 
 

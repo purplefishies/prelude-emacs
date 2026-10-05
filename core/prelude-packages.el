@@ -58,7 +58,7 @@
     ag
     avy
     browse-kill-ring
-    crux
+    ;; crux is intentionally disabled
     discover-my-major
     diff-hl
     diminish

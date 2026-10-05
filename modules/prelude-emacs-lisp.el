@@ -31,7 +31,6 @@
 ;;; Code:
 
 (require 'prelude-lisp)
-(require 'crux)
 
 (defun prelude-recompile-elc-on-save ()
   "Recompile your elc when saving an elisp file."
@@ -48,7 +47,9 @@
   "Switch to default `ielm' buffer.
 Start `ielm' if it's not already running."
   (interactive)
-  (crux-start-or-switch-to 'ielm "*ielm*"))
+  (if (get-buffer "*ielm*")
+      (pop-to-buffer "*ielm*")
+    (ielm)))
 
 (define-key emacs-lisp-mode-map (kbd "C-c C-z") 'prelude-visit-ielm)
 (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'eval-defun)

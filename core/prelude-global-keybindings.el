@@ -38,9 +38,6 @@
                                 (interactive)
                                 (other-window -1))) ;; back one
 
-;; Indentation help
-(global-set-key (kbd "C-^") 'crux-top-join-line)
-
 ;; Start eshell or switch to it if it's active.
 (global-set-key (kbd "C-x m") 'eshell)
 
@@ -69,11 +66,6 @@
 ;; replace zap-to-char functionality with the more powerful zop-to-char
 (global-set-key (kbd "M-z") 'zop-up-to-char)
 (global-set-key (kbd "M-Z") 'zop-to-char)
-
-;; kill lines backward
-(global-set-key (kbd "C-<backspace>") 'crux-kill-line-backwards)
-
-(global-set-key [remap kill-whole-line] 'crux-kill-whole-line)
 
 ;; Activate occur easily inside isearch
 (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)

@@ -108,6 +108,9 @@ by Prelude.")
 
 (message "[Prelude] Loading Prelude's core modules...")
 
+;; Disable Prelude's undo-tree integration before prelude-editor is loaded.
+(setq prelude-undo-tree nil)
+
 ;; load the core stuff
 (require 'prelude-packages)
 (require 'prelude-custom)  ;; Needs to be loaded before core, editor and ui
@@ -254,12 +257,6 @@ truncated `configuration.el' that breaks the next Emacs startup."
       (set-face-attribute face nil :overline nil))))
 
 
-
-(where-is 'crux-cleanup-buffer-or-region)
-
-(with-eval-after-load 'undo-tree
-  (global-undo-tree-mode -1))
-(remove-hook 'after-init-hook #'global-undo-tree-mode)
 
 ;; ~/.emacs.d/init.el
 (require 'server)

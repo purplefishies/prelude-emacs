@@ -50,9 +50,7 @@
 ;; (the final optional t sets the *append* argument)
 
 ;; smart curly braces
-(sp-pair "{" nil :post-handlers
-         '(((lambda (&rest _ignored)
-              (crux-smart-open-line-above)) "RET")))
+(sp-pair "{" nil)
 
 ;; enlist a more liberal guru
 (setq guru-warn-only t)
