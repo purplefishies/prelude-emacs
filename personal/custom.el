@@ -11,6 +11,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(org-agenda-calendar-event ((t (:background "#3e322a" :foreground "dark sea green" :overline nil :weight bold))))
+ '(org-agenda-current-time ((t (:foreground "violet" :overline nil :underline t :weight extra-bold))))
  '(org-agenda-done ((t (:foreground "aquamarine4" :strike-through t :overline nil))))
  '(org-agenda-structure ((t (:inherit font-lock-comment-face :foreground "#D0A875" :overline nil :weight bold :height 1.6))))
  '(org-headline-done ((t (:foreground "#376F5D" :strike-through t :overline nil :weight normal :height 1.0))))

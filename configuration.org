@@ -2,7 +2,7 @@
 #+AUTHOR: Jimi Damon
 #+EMAIL: jdamon@gmail.com
 #+OPTIONS: toc:nil num:nil
-#+TODO: TODO(t) NEXT(n) WAITING(w) HOLD(h) BLOCKED(b) POSTPONED(p) |  DONE(d)
+#+TODO: TODO(t) NEXT(n) WAITING(w) INPROGRESS(p) HOLD(h) BLOCKED(b) POSTPONED(P) |  DONE(d@) CANCELLED(c@)
 
 
 
@@ -552,6 +552,8 @@ YEAR/Month subdirectory based on the org file name, and insert a link."
 
 #+end_src
 
+
+
 * Project management
 
 I use a few packages in virtually every programming or writing environment to
@@ -697,6 +699,18 @@ project root (if I'm not in a "real" project).
     (setq projectile-completion-system 'ivy)
     (setq projectile-switch-project-action 'projectile-dired)
     (setq projectile-require-project-root nil))
+#+END_SRC
+
+** =undo-tree=
+   :PROPERTIES:
+   :ID:       ec238dcf-37dd-42d8-9379-53cf863cd2fb
+   :END:
+
+I like tree-based undo management. I only rarely need it, but when I do, oh boy.
+
+#+BEGIN_SRC emacs-lisp
+  ;; Learn to use undo tree before including it
+  ;; (use-package undo-tree)
 #+END_SRC
 
 * Language Support and Development Environments
@@ -2175,6 +2189,7 @@ Hiding leading stars
                                 (concat dropbox-directory "gtd.org")
                                 (concat dropbox-directory "archive.org")
                                 (concat dropbox-directory "inbox.org")
+                                (concat dropbox-directory "galttasks.org")
                                 (concat dropbox-directory "work.org"
                                ))))
 
@@ -2248,6 +2263,10 @@ Hiding leading stars
                                            :order 6
                                            :file-path "inbox"
                                  )
+                          (:name "Galt Tasks"
+                                 :order 7
+                                 :and (:file-path "galttasks\\.org$"
+                                        :todo ("TODO" "INPROGRESS")))
                           (:name "Waiting"
                                 :todo "WAITING"
                                 )
@@ -3436,6 +3455,7 @@ Magit
   :custom
   (magit-delta-delta-args '("--navigate" "--line-numbers")))
 #+end_src
+
 * Auto commit org (and shell)
 #+begin_src emacs-lisp
 
@@ -3502,7 +3522,6 @@ Entries apply recursively.  Add another directory with, for example,
 (setq org-log-into-drawer t)                 ;; keep log notes tidy
 #+end_src
 
-
 * Helm
 #+begin_src emacs-lisp
 (use-package helm
@@ -3519,16 +3538,13 @@ Entries apply recursively.  Add another directory with, for example,
   :bind (("C-c h" . helm-org-agenda-files-headings)))
 #+end_src
 
-
 * Todos
 #+begin_src emacs-lisp
 (setq org-todo-keywords
       '((sequence
-         "TODO(t)" "NEXT(n)" "WAITING(w)" "BLOCKED(b)" "POSTPONED(p)" "HOLD(h)" "|"
+         "TODO(t)" "NEXT(n)" "WAITING(w)" "BLOCKED(b)" "INPROGRESS(p)" "POSTPONED(P)" "HOLD(h)" "|"
          "DONE(d@)" "CANCELLED(c@/!)"  )))
 #+end_src
-
-
 
 
 
@@ -4195,7 +4211,6 @@ document.addEventListener('DOMContentLoaded', function () {
   (setq org-anki-default-deck "Default")) ; Match your pre-existing Anki deck name
 #+end_src
 
-
 * Doxymacs
 #+begin_src emacs-lisp
 
@@ -4214,7 +4229,6 @@ document.addEventListener('DOMContentLoaded', function () {
   (define-key c-mode-base-map (kbd "C-c d s") #'doxymacs-insert-blank-singleline-comment))
 
 #+end_src
-
 
 * SVG Bob
 #+begin_src emacs-lisp
@@ -4417,8 +4431,6 @@ Insert a relative Org link and display its first page inline."
 
 
 * Capture template for 
-
-
 * Emacs inline images
 #+begin_src emacs-lisp
 
@@ -4437,9 +4449,116 @@ Insert a relative Org link and display its first page inline."
 
 * Personal ledger
 #+begin_src emacs-lisp
-  (load (expand-file-name "personal/ledger-inline-receipts.el"
-                          user-emacs-directory)
-        nil nil t)
+  (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
+#+end_src
+
+
+
+
+* Fixing symlinks 
+#+begin_src emacs-lisp
+  (setq find-file-visit-truename t)
+#+end_src
+
+* Yank images
+#+begin_src emacs-lisp
+(setq org-yank-image-save-method
+      (lambda ()
+        (expand-file-name
+         (format-time-string "images/%Y/%b/")
+         (or (and buffer-file-name
+                  (file-name-directory buffer-file-name))
+             default-directory))))
+#+end_src
+
+#+RESULTS:
+
+
+* Fix image display
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+      (defun jmd/org-display-dpi-fallback ()
+        (if (display-graphic-p)
+            (let ((mm-height (display-mm-height)))
+              (if (> mm-height 0)
+                  (round (/ (display-pixel-height)
+                            (/ mm-height 25.4)))
+                (error "Emacs reported a zero physical display height")))
+          (error "Attempt to calculate DPI in a non-graphic display")))
+      (advice-add 'org--get-display-dpi :override
+                  #'jmd/org-display-dpi-fallback))
+#+end_src
+
+
+* Versioning of headers
+
+#+begin_src emacs-lisp
+  (defun jmd/org-bump-releases (&optional amount)
+    "Add AMOUNT to the minor version of this and later sibling TODOs."
+    (interactive "p")
+    (setq amount (or amount 1))
+    (org-back-to-heading t)
+    (let ((level (org-outline-level))
+          (end (copy-marker
+                (save-excursion
+                  (if (org-up-heading-safe)
+                      (org-end-of-subtree t t)
+                    (point-max))) t))
+          (version-re "[(][ \t]*[0-9]+\\.\\([0-9]+\\)\\.[0-9]+[ \t]*[)]"))
+      (unwind-protect
+          (atomic-change-group
+            (save-excursion
+              (while (re-search-forward org-heading-regexp end t)
+                (beginning-of-line)
+                (when (and (= (org-outline-level) level)
+                           (member (org-get-todo-state)
+                                   org-not-done-keywords)
+                           (re-search-forward version-re
+                                              (line-end-position) t))
+                  (let ((minor (+ (string-to-number (match-string 1))
+                                  amount)))
+                    (when (< minor 0)
+                      (user-error "Minor version cannot be negative"))
+                    (replace-match (number-to-string minor)
+                                   t t nil 1)))
+                (end-of-line))))
+        (set-marker end nil))))
+#+end_src
+
+* Git configs
+#+begin_src emacs-lisp
+(use-package git-modes
+  :ensure t)
+#+end_src
+
+* Sync Galt tasks
+#+begin_src emacs-lisp
+(defun jmd/sync-galt-tasks ()
+  "Sync Galt tasks and comments with GitLab."
+  (interactive)
+  (let* ((tasks-file (file-truename
+                      (expand-file-name "~/Dropbox/org/galttasks.org")))
+         (tasks-buffer (find-buffer-visiting tasks-file))
+         (output-buffer (get-buffer-create "*Galt Tasks Sync*"))
+         (command (format "%s sync --insecure 2>&1"
+                          (shell-quote-argument
+                           (expand-file-name "~/Scripts/gitlab_tasks.py")))))
+    (when tasks-buffer
+      (with-current-buffer tasks-buffer
+        (when (buffer-modified-p)
+          (save-buffer))))
+    (with-current-buffer output-buffer
+      (erase-buffer))
+    (let ((status (call-process-shell-command command nil output-buffer nil)))
+      (when (buffer-live-p tasks-buffer)
+        (with-current-buffer tasks-buffer
+          (unless (buffer-modified-p)
+            (revert-buffer t t))))
+      (unless (and (integerp status) (zerop status))
+        (display-buffer output-buffer)
+        (user-error "Galt task sync failed; see %s" (buffer-name output-buffer)))
+      (message "Galt tasks synced; see %s" (buffer-name output-buffer)))))
 #+end_src
 
 * Disable Prelude super-save
