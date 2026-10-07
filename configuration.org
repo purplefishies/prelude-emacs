@@ -2290,7 +2290,7 @@ Hiding leading stars
           (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
         ("L" "Work Journal" tags-todo "CATEGORY=\"workjournal\""
          ((org-agenda-overriding-header "Work Journal")))
-        )); 
+        ));
 
 (defun jmd-org-tasks-closed-in-month (&optional month year match-string)
   "Produces an org agenda tags view list of the tasks completed
@@ -3554,7 +3554,7 @@ Entries apply recursively.  Add another directory with, for example,
 - FlexNet license manager: C:\AMDDesignTools\2026.1\Vivado\bin\unwrapped\win64.o\lmgrd.exe
 - AMD/Xilinx vendor daemon: C:\AMDDesignTools\win64.o\xilinxd.exe
 
-    
+
 * Org file opening
 
 #+begin_src emacs-lisp
@@ -4106,7 +4106,7 @@ document.addEventListener('DOMContentLoaded', function () {
 #+end_src
 
 
-* Tikz 
+* Tikz
 
 #+begin_src emacs-lisp
 
@@ -4430,7 +4430,7 @@ Insert a relative Org link and display its first page inline."
 #+end_src
 
 
-* Capture template for 
+* Capture template for
 * Emacs inline images
 #+begin_src emacs-lisp
 
@@ -4446,16 +4446,15 @@ Insert a relative Org link and display its first page inline."
 #+RESULTS:
 | org-inline-pdf-mode | (lambda nil (local-set-key (kbd S-<left>) #'org-shiftleft) (local-set-key (kbd S-<right>) #'org-shiftright) (local-set-key (kbd <S-left>) #'org-shiftleft) (local-set-key (kbd <S-right>) #'org-shiftright)) | org-ref-org-menu | org-clock-load | org-bullets-mode | turn-on-flyspell | turn-on-auto-fill | outline-minor-mode | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-fold-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (run-hooks 'prelude-org-mode-hook)) |
 
-
 * Personal ledger
 #+begin_src emacs-lisp
-  (load "~/Projects/prelude-emacs/personal/ledger-inline-receipts.el" nil nil t)
+  (load "~/.emacs.d/personal/ledger-inline-receipts.el" nil nil t)
 #+end_src
 
 
 
 
-* Fixing symlinks 
+* Fixing symlinks
 #+begin_src emacs-lisp
   (setq find-file-visit-truename t)
 #+end_src
